@@ -22,6 +22,9 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 		return nil, fmt.Errorf("unable to ping Clickhouse: %v", err)
 	}
 
+	if c.DBName == "" {
+		c.DBName = "metrics"
+	}
 	_, err = connect.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
 			ts UInt64,
