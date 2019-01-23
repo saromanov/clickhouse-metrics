@@ -13,24 +13,22 @@ type ClickHouseMetrics struct {
 }
 
 // New provides initialization of the project
-func New() (*ClickHouseMetrics, error) {
+func New(c *Config) (*ClickHouseMetrics, error) {
 	connect, err := sql.Open("clickhouse", "tcp://127.0.0.1:9000?username=&compress=true&debug=true")
 	if err := connect.Ping(); err != nil {
 		if exception, ok := err.(*clickhouse.Exception); ok {
-			fmt.Printf("[%d] %s \n%s\n", exception.Code, exception.Message, exception.StackTrace)
-		} else {
-			fmt.Println(err)
+			return nil, fmt.Errorf("[%d] %s %s", exception.Code, exception.Message, exception.StackTrace)
 		}
-		return
+		return nil, fmt.Errorf("unable to ping Clickhouse: %v", err)
 	}
 
-	_, err = connect.Exec(`
-		CREATE TABLE IF NOT EXISTS example (
+	_, err = connect.Exec(fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (
 			ts UInt64,
 			names Array(String),
 			values Array(String),
 		) engine=MergeTree(d, timestamp, 8192)
-	`)
+	`, c.DBName))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create metrics table: %v", err)
 	}
