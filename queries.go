@@ -7,4 +7,5 @@ type Query struct {
 	TsEqual   uint32
 	Tsgreater uint32
 	TsLess    uint
+	Range     string
 }
