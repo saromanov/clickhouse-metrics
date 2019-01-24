@@ -9,9 +9,10 @@ import (
 
 // Metric defines structure for metrics representation
 type Metric struct {
-	Names []string `json:"names"`
-	Values []string `json:"values"`
-	Timestamp uint64 `json:"timestamp"`
+	Entity    string   `json:"entity"`
+	Names     []string `json:"names"`
+	Values    []string `json:"values"`
+	Timestamp uint64   `json:"timestamp"`
 }
 
 // ClickHouseMetrics implements the main app
@@ -49,6 +50,6 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 }
 
 // Insert provides inserting of the metrics data
-func (c*ClickHouseMetrics) Insert(m *Metric) error {
-
+func (c *ClickHouseMetrics) Insert(m *Metric) error {
+	return nil
 }
