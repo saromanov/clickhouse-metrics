@@ -136,7 +136,7 @@ func (c *ClickHouseMetrics) QueryByMetric(q *Query) ([]interface{}, error) {
 	for rows.Next() {
 		var (
 			entity string
-			ts     time.Time
+			ts     interface{}
 			value  float32
 		)
 		if err := rows.Scan(&ts, &entity, &value); err != nil {
