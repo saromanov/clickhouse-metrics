@@ -7,6 +7,13 @@ import (
 	"github.com/kshvakov/clickhouse"
 )
 
+// Metric defines structure for metrics representation
+type Metric struct {
+	Names []string `json:"names"`
+	Values []string `json:"values"`
+	Timestamp uint64 `json:"timestamp"`
+}
+
 // ClickHouseMetrics implements the main app
 type ClickHouseMetrics struct {
 	client *sql.DB
@@ -39,4 +46,9 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 	return &ClickHouseMetrics{
 		client: connect,
 	}, nil
+}
+
+// Insert provides inserting of the metrics data
+func (c*ClickHouseMetrics) Insert(m *Metric) error {
+
 }
