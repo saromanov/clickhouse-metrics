@@ -51,5 +51,13 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 
 // Insert provides inserting of the metrics data
 func (c *ClickHouseMetrics) Insert(m *Metric) error {
+	tx, err   = c.client.Begin()
+	if err != nil {
+		return fmt.Errorf("unable to begin transaction: %v", err)
+	}
+	stmt, err = tx.Prepare("INSERT INTO example (country_code, os_id, browser_id, categories, action_day, action_time) VALUES (?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		return fmt.Errorf("unable to prepare transaction: %v", err)
+	}
 	return nil
 }
