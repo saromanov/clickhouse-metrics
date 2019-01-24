@@ -99,3 +99,13 @@ func (c *ClickHouseMetrics) Query(q string) ([]*Metric, error) {
 	}
 	return metrics, nil
 }
+
+// QueryByMetric retruns records by the metric name
+func (c *ClickHouseMetrics) QueryByMetric(name string) ([]*Metric, error) {
+	rows, err := c.client.Query(fmt.Sprintf("SELECT ts, entity, values[indexOf(metrics, '%s')] AS %s", name))
+	if err != nil {
+		return nil, fmt.Errorf("unable to apply query: %v", err)
+	}
+	defer rows.Close()
+	return nil, nil
+}
