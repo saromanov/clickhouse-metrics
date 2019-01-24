@@ -3,6 +3,7 @@ package metrics
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/kshvakov/clickhouse"
 )
@@ -60,6 +61,13 @@ func (c *ClickHouseMetrics) Insert(m *Metric) error {
 	stmt, err := tx.Prepare(fmt.Sprintf("INSERT INTO %s (ts, names, values) VALUES (?, ?, ?)", c.config.DBName))
 	if err != nil {
 		return fmt.Errorf("unable to prepare transaction: %v", err)
+	}
+	_, err = stmt.Exec(time.Now().Unix(), m.Names, m.Values)
+	if err != nil {
+		return fmt.Errorf("unable to apply query: %v", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("unable to commit transaction: %v", err)
 	}
 	return nil
 }
