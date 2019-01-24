@@ -9,6 +9,8 @@ import (
 	"github.com/kshvakov/clickhouse"
 )
 
+var dateRanges = map[string]string{"m": "toIntervalMinute", "h": "toIntervalHour"}
+
 // Metric defines structure for metrics representation
 type Metric struct {
 	Entity   string    `json:"entity"`
@@ -122,7 +124,9 @@ func (c *ClickHouseMetrics) QueryByMetric(q *Query) ([]interface{}, error) {
 	if q.TsGreater > 0 && q.TsLess > 0 {
 		queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND ts > %d AND ts < %d", q.Label, q.Label, c.config.DBName, q.Entity, q.TsGreater, q.TsLess)
 	}
-	queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND datetime > (now() - toIntervalMinute(1))", q.Label, q.Label, c.config.DBName, q.Entity)
+	if q.Range != "" {
+		queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND datetime > (%s)", q.Label, q.Label, c.config.DBName, q.Entity, constructDateRange(q.Range))
+	}
 	rows, err := c.client.Query(queryReq)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply query: %v", err)
@@ -150,10 +154,12 @@ func (c *ClickHouseMetrics) QueryByMetric(q *Query) ([]interface{}, error) {
 // constructDateRange provides constructing of the range
 // to ClickHouse format
 func constructDateRange(r string) string {
-	resp := fmt.Sprintf("now() - ")
-	if strings.HasSuffix(r, "m") {
-		value := r[:len(r)-1]
-		return resp + fmt.Sprintf("toIntervalMinute(%s)", value)
+	resp := "now()"
+	for k, v := range dateRanges{
+		if strings.HasSuffix(r, k) {
+			value := r[:len(r)-1]
+			return resp + fmt.Sprintf(" - %s(%s)", v, value)
+		}
 	}
 	return resp
 }
