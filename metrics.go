@@ -3,6 +3,7 @@ package metrics
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/kshvakov/clickhouse"
@@ -10,10 +11,10 @@ import (
 
 // Metric defines structure for metrics representation
 type Metric struct {
-	Entity    string    `json:"entity"`
-	Names     []string  `json:"names"`
-	Values    []float32 `json:"values"`
-	Timestamp uint64    `json:"timestamp"`
+	Entity   string    `json:"entity"`
+	Names    []string  `json:"names"`
+	Values   []float32 `json:"values"`
+	DateTime time.Time `json:"datetime"`
 }
 
 // ClickHouseMetrics implements the main app
@@ -38,11 +39,11 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 	_, err = connect.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
 			entity String,
-			ts UInt64,
+			datetime DateTime,
 			names Array(String),
 			values Array(Float32),
-			d Date MATERIALIZED toDate(round(ts/1000))
-		) engine=MergeTree(d, ts, 8192)
+			d Date MATERIALIZED toDate(datetime)
+		) engine=MergeTree(d, datetime, 8192)
 	`, c.DBName))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create metrics table: %v", err)
@@ -56,16 +57,16 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 
 // Insert provides inserting of the metrics data
 func (c *ClickHouseMetrics) Insert(m *Metric) error {
-	m.Timestamp = uint64(time.Now().Unix())
+	m.DateTime = time.Now()
 	tx, err := c.client.Begin()
 	if err != nil {
 		return fmt.Errorf("unable to begin transaction: %v", err)
 	}
-	stmt, err := tx.Prepare(fmt.Sprintf("INSERT INTO %s (ts, names, values, entity) VALUES (?, ?, ?, ?)", c.config.DBName))
+	stmt, err := tx.Prepare(fmt.Sprintf("INSERT INTO %s (datetime, names, values, entity) VALUES (?, ?, ?, ?)", c.config.DBName))
 	if err != nil {
 		return fmt.Errorf("unable to prepare transaction: %v", err)
 	}
-	_, err = stmt.Exec(time.Now().Unix(), m.Names, m.Values, m.Entity)
+	_, err = stmt.Exec(time.Now(), m.Names, m.Values, m.Entity)
 	if err != nil {
 		return fmt.Errorf("unable to apply query: %v", err)
 	}
@@ -85,19 +86,19 @@ func (c *ClickHouseMetrics) Query(q string) ([]*Metric, error) {
 	metrics := []*Metric{}
 	for rows.Next() {
 		var (
-			values []float32
-			names  []string
-			entity string
-			ts     uint64
+			values   []float32
+			names    []string
+			entity   string
+			datetime time.Time
 		)
-		if err := rows.Scan(&values, &names, &entity, &ts); err != nil {
+		if err := rows.Scan(&values, &names, &entity, &datetime); err != nil {
 			return nil, fmt.Errorf("unable to scan values: %v", err)
 		}
 		metrics = append(metrics, &Metric{
-			Timestamp: ts,
-			Values:    values,
-			Names:     names,
-			Entity:    entity,
+			DateTime: datetime,
+			Values:   values,
+			Names:    names,
+			Entity:   entity,
 		})
 	}
 	return metrics, nil
@@ -113,14 +114,15 @@ func (c *ClickHouseMetrics) QueryByMetric(q *Query) ([]interface{}, error) {
 
 	queryReq := ""
 	if q.Entity != "" && q.Label != "" {
-		queryReq = fmt.Sprintf("SELECT ts, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s'", q.Label, q.Label, c.config.DBName, q.Entity)
+		queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s'", q.Label, q.Label, c.config.DBName, q.Entity)
 	}
 	if q.TsEqual != 0 {
-		queryReq = fmt.Sprintf("SELECT ts, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND ts = %d", q.Label, q.Label, c.config.DBName, q.Entity, q.TsEqual)
+		queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND ts = %d", q.Label, q.Label, c.config.DBName, q.Entity, q.TsEqual)
 	}
 	if q.TsGreater > 0 && q.TsLess > 0 {
-		queryReq = fmt.Sprintf("SELECT ts, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND ts > %d AND ts < %d", q.Label, q.Label, c.config.DBName, q.Entity, q.TsGreater, q.TsLess)
+		queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND ts > %d AND ts < %d", q.Label, q.Label, c.config.DBName, q.Entity, q.TsGreater, q.TsLess)
 	}
+	queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND datetime > (now() - toIntervalMinute(1))", q.Label, q.Label, c.config.DBName, q.Entity)
 	rows, err := c.client.Query(queryReq)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply query: %v", err)
@@ -130,7 +132,7 @@ func (c *ClickHouseMetrics) QueryByMetric(q *Query) ([]interface{}, error) {
 	for rows.Next() {
 		var (
 			entity string
-			ts     uint64
+			ts     time.Time
 			value  float32
 		)
 		if err := rows.Scan(&ts, &entity, &value); err != nil {
@@ -143,4 +145,15 @@ func (c *ClickHouseMetrics) QueryByMetric(q *Query) ([]interface{}, error) {
 		})
 	}
 	return metrics, nil
+}
+
+// constructDateRange provides constructing of the range
+// to ClickHouse format
+func constructDateRange(r string) string {
+	resp := fmt.Sprintf("now() - ")
+	if strings.HasSuffix(r, "m") {
+		value := r[:len(r)-1]
+		return resp + fmt.Sprintf("toIntervalMinute(%s)", value)
+	}
+	return resp
 }
