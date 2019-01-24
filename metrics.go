@@ -118,6 +118,9 @@ func (c *ClickHouseMetrics) QueryByMetric(q *Query) ([]interface{}, error) {
 	if q.TsEqual != 0 {
 		queryReq = fmt.Sprintf("SELECT ts, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND ts = %d", q.Label, q.Label, c.config.DBName, q.Entity, q.TsEqual)
 	}
+	if q.TsGreater > 0 && q.TsLess > 0 {
+		queryReq = fmt.Sprintf("SELECT ts, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND ts > %d AND ts < %d", q.Label, q.Label, c.config.DBName, q.Entity, q.TsGreater, q.TsLess)
+	}
 	rows, err := c.client.Query(queryReq)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply query: %v", err)
