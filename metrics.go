@@ -56,15 +56,16 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 
 // Insert provides inserting of the metrics data
 func (c *ClickHouseMetrics) Insert(m *Metric) error {
+	m.Timestamp = uint64(time.Now().Unix())
 	tx, err := c.client.Begin()
 	if err != nil {
 		return fmt.Errorf("unable to begin transaction: %v", err)
 	}
-	stmt, err := tx.Prepare(fmt.Sprintf("INSERT INTO %s (ts, names, values) VALUES (?, ?, ?)", c.config.DBName))
+	stmt, err := tx.Prepare(fmt.Sprintf("INSERT INTO %s (ts, names, values, entity) VALUES (?, ?, ?, ?)", c.config.DBName))
 	if err != nil {
 		return fmt.Errorf("unable to prepare transaction: %v", err)
 	}
-	_, err = stmt.Exec(time.Now().Unix(), m.Names, m.Values)
+	_, err = stmt.Exec(time.Now().Unix(), m.Names, m.Values, m.Entity)
 	if err != nil {
 		return fmt.Errorf("unable to apply query: %v", err)
 	}
@@ -104,7 +105,7 @@ func (c *ClickHouseMetrics) Query(q string) ([]*Metric, error) {
 
 // QueryByMetric retruns records by the metric name
 func (c *ClickHouseMetrics) QueryByMetric(name string) ([]*Metric, error) {
-	rows, err := c.client.Query(fmt.Sprintf("SELECT ts, entity, values[indexOf(metrics, '%s')] AS %s", name))
+	rows, err := c.client.Query(fmt.Sprintf("SELECT ts, entity, values[indexOf(metrics, '%s')] AS %s", name, name))
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply query: %v", err)
 	}
