@@ -71,3 +71,31 @@ func (c *ClickHouseMetrics) Insert(m *Metric) error {
 	}
 	return nil
 }
+
+// Query provides query of the data by the request
+func (c *ClickHouseMetrics) Query(q string) ([]*Metric, error) {
+	rows, err := c.client.Query(q)
+	if err != nil {
+		return nil, fmt.Errorf("unable to apply query: %v", err)
+	}
+	defer rows.Close()
+	metrics := []*Metric{}
+	for rows.Next() {
+		var (
+			values []string
+			names  []string
+			entity string
+			ts     uint64
+		)
+		if err := rows.Scan(&values, &names, &entity, &ts); err != nil {
+			return nil, fmt.Errorf("unable to scan values: %v", err)
+		}
+		metrics = append(metrics, &Metric{
+			Timestamp: ts,
+			Values:    values,
+			Names:     names,
+			Entity:    entity,
+		})
+	}
+	return metrics, nil
+}
