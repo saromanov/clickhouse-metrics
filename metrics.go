@@ -10,10 +10,10 @@ import (
 
 // Metric defines structure for metrics representation
 type Metric struct {
-	Entity    string   `json:"entity"`
-	Names     []string `json:"names"`
-	Values    []string `json:"values"`
-	Timestamp uint64   `json:"timestamp"`
+	Entity    string    `json:"entity"`
+	Names     []string  `json:"names"`
+	Values    []float32 `json:"values"`
+	Timestamp uint64    `json:"timestamp"`
 }
 
 // ClickHouseMetrics implements the main app
@@ -37,10 +37,12 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 	}
 	_, err = connect.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
+			entity String,
 			ts UInt64,
 			names Array(String),
-			values Array(String),
-		) engine=MergeTree(d, timestamp, 8192)
+			values Array(Float32),
+			d Date MATERIALIZED toDate(round(ts/1000))
+		) engine=MergeTree(d, ts, 8192)
 	`, c.DBName))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create metrics table: %v", err)
@@ -82,7 +84,7 @@ func (c *ClickHouseMetrics) Query(q string) ([]*Metric, error) {
 	metrics := []*Metric{}
 	for rows.Next() {
 		var (
-			values []string
+			values []float32
 			names  []string
 			entity string
 			ts     uint64
