@@ -6,6 +6,6 @@ type Query struct {
 	Label     string
 	TsEqual   uint32
 	TsGreater uint32
-	TsLess    uint
+	TsLess    uint32
 	Range     string
 }

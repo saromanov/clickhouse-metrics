@@ -122,7 +122,7 @@ func (c *ClickHouseMetrics) QueryByMetric(q *Query) ([]interface{}, error) {
 		queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND ts = %d", q.Label, q.Label, c.config.DBName, q.Entity, q.TsEqual)
 	}
 	if q.TsGreater > 0 && q.TsLess > 0 {
-		queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND ts > %d AND ts < %d", q.Label, q.Label, c.config.DBName, q.Entity, q.TsGreater, q.TsLess)
+		queryReq = fmt.Sprintf("SELECT toUInt64(datetime) AS ts, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND ts > %d AND ts < %d", q.Label, q.Label, c.config.DBName, q.Entity, q.TsGreater, q.TsLess)
 	}
 	if q.Range != "" {
 		queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND datetime > (%s)", q.Label, q.Label, c.config.DBName, q.Entity, constructDateRange(q.Range))
@@ -155,7 +155,7 @@ func (c *ClickHouseMetrics) QueryByMetric(q *Query) ([]interface{}, error) {
 // to ClickHouse format
 func constructDateRange(r string) string {
 	resp := "now()"
-	for k, v := range dateRanges{
+	for k, v := range dateRanges {
 		if strings.HasSuffix(r, k) {
 			value := r[:len(r)-1]
 			return resp + fmt.Sprintf(" - %s(%s)", v, value)
