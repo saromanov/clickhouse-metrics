@@ -104,11 +104,27 @@ func (c *ClickHouseMetrics) Query(q string) ([]*Metric, error) {
 }
 
 // QueryByMetric retruns records by the metric name
-func (c *ClickHouseMetrics) QueryByMetric(entity, name string) ([]*Metric, error) {
+func (c *ClickHouseMetrics) QueryByMetric(entity, name string) ([]interface{}, error) {
 	rows, err := c.client.Query(fmt.Sprintf("SELECT ts, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s'", name, name, c.config.DBName, entity))
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply query: %v", err)
 	}
 	defer rows.Close()
-	return nil, nil
+	metrics := []interface{}{}
+	for rows.Next() {
+		var (
+			entity string
+			ts     uint64
+			value  float32
+		)
+		if err := rows.Scan(&ts, &entity, &value); err != nil {
+			return nil, fmt.Errorf("unable to scan values: %v", err)
+		}
+		metrics = append(metrics, map[string]interface{}{
+			"entity": entity,
+			name:     value,
+			"ts":     ts,
+		})
+	}
+	return metrics, nil
 }
