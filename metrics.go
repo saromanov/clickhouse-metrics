@@ -18,6 +18,7 @@ type Metric struct {
 // ClickHouseMetrics implements the main app
 type ClickHouseMetrics struct {
 	client *sql.DB
+	config *Config
 }
 
 // New provides initialization of the project
@@ -46,6 +47,7 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 
 	return &ClickHouseMetrics{
 		client: connect,
+		config: c,
 	}, nil
 }
 
