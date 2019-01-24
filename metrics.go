@@ -103,6 +103,11 @@ func (c *ClickHouseMetrics) Query(q string) ([]*Metric, error) {
 	return metrics, nil
 }
 
+// Client returns current ClickHouse client
+func (c *ClickHouseMetrics) Client() *sql.DB {
+	return c.client
+}
+
 // QueryByMetric retruns records by the metric name
 func (c *ClickHouseMetrics) QueryByMetric(entity, name string) ([]interface{}, error) {
 	rows, err := c.client.Query(fmt.Sprintf("SELECT ts, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s'", name, name, c.config.DBName, entity))
