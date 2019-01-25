@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/kshvakov/clickhouse"
@@ -179,17 +178,4 @@ func (c *ClickHouseMetrics) Aggregate(q *AggregateQuery) (interface{}, error) {
 		}
 	}
 	return result, nil
-}
-
-// constructDateRange provides constructing of the range
-// to ClickHouse format
-func constructDateRange(r string) string {
-	resp := "now()"
-	for k, v := range dateRanges {
-		if strings.HasSuffix(r, k) {
-			value := r[:len(r)-1]
-			return resp + fmt.Sprintf(" - %s(%s)", v, value)
-		}
-	}
-	return resp
 }

@@ -62,3 +62,16 @@ func (q *queryBuilder) checkAction() (string, error) {
 	}
 	return res, nil
 }
+
+// constructDateRange provides constructing of the range
+// to ClickHouse format
+func constructDateRange(r string) string {
+	resp := "now()"
+	for k, v := range dateRanges {
+		if strings.HasSuffix(r, k) {
+			value := r[:len(r)-1]
+			return resp + fmt.Sprintf(" - %s(%s)", v, value)
+		}
+	}
+	return resp
+}
