@@ -26,7 +26,10 @@ func (a *AggregateQuery) makeEntitiesQuery() string {
 	}
 	res := " WHERE ( "
 	for i := 0; i < len(a.Entities); i++ {
-		res += fmt.Sprintf("entity = '%s AND ", a.Entities[i])
+		res += fmt.Sprintf("entity = '%s' ", a.Entities[i])
+		if i+1 != len(a.Entities) {
+			res += "OR "
+		}
 	}
 	return res + ")"
 }

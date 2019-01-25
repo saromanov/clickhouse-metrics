@@ -167,6 +167,7 @@ func (c *ClickHouseMetrics) Aggregate(q *AggregateQuery) (interface{}, error) {
 	if len(q.Entities) > 0 {
 		queryReq += q.makeEntitiesQuery()
 	}
+	fmt.Println(queryReq)
 	rows, err := c.client.Query(queryReq)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply query: %v", err)
