@@ -9,3 +9,8 @@ type Query struct {
 	TsLess    uint32
 	Range     string
 }
+
+// AggregateQuery defines struct for making aggregation
+type AggregateQuery struct {
+	Action string
+}
