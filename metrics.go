@@ -151,6 +151,23 @@ func (c *ClickHouseMetrics) QueryByMetric(q *Query) ([]interface{}, error) {
 	return metrics, nil
 }
 
+// Aggnregate provides operations for aggregation
+func (c *ClickHouseMetrics) Aggregate(q *AggregateQuery) (interface{}, error) {
+	queryReq := fmt.Sprintf("SELECT min(values[indexOf(names, '%s')]) AS result FROM %s WHERE entity = '%s'", q.Label, c.config.DBName, q.Entity)
+	rows, err := c.client.Query(queryReq)
+	if err != nil {
+		return nil, fmt.Errorf("unable to apply query: %v", err)
+	}
+	defer rows.Close()
+	var result interface{}
+	for rows.Next() {
+		if err := rows.Scan(&result); err != nil {
+			return nil, fmt.Errorf("unable to scan values: %v", err)
+		}
+	}
+	return result, nil
+}
+
 // constructDateRange provides constructing of the range
 // to ClickHouse format
 func constructDateRange(r string) string {

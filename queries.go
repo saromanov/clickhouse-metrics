@@ -13,4 +13,6 @@ type Query struct {
 // AggregateQuery defines struct for making aggregation
 type AggregateQuery struct {
 	Action string
+	Entity string
+	Label  string
 }
