@@ -194,12 +194,3 @@ func constructDateRange(r string) string {
 	}
 	return resp
 }
-
-// checkAction return error if action function is not defined
-func checkAction(a string) (string, error) {
-	res, ok := actions[a]
-	if !ok {
-		return "", errActionIsNotFound
-	}
-	return res, nil
-}

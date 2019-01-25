@@ -17,6 +17,8 @@ type AggregateQuery struct {
 	Action   string
 	Entities []string
 	Label    string
+	Range    string
+	q        string
 }
 
 // makeEntitiesQuery retruns query for entities
