@@ -46,12 +46,16 @@ func (q *queryBuilder) makeEntitiesQuery() string {
 
 // makeRangeQuery retruns query if range is defined
 func (q *queryBuilder) makeRangeQuery() string {
+	var res string
+	defer func(value string) {
+		q.q += res
+	}(res)
 	if strings.Contains(q.q, "WHERE") {
-		q.q += fmt.Sprintf(" AND datetime > (%s)", constructDateRange(q.aq.Range))
-		return q.q
+		res = fmt.Sprintf(" AND (datetime > (%s))", constructDateRange(q.aq.Range))
+		return res
 	}
-	q.q += fmt.Sprintf("WHERE datetime > (%s)", constructDateRange(q.aq.Range))
-	return q.q
+	res = fmt.Sprintf("WHERE datetime > (%s)", constructDateRange(q.aq.Range))
+	return res
 }
 
 // checkAction return error if action function is not defined

@@ -166,6 +166,7 @@ func (c *ClickHouseMetrics) Aggregate(q *AggregateQuery) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("QUERY: ", query)
 	rows, err := c.client.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply query: %v", err)
