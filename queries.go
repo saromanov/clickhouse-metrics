@@ -22,7 +22,7 @@ type ListQuery struct {
 }
 
 // GetEntitis returns slice of entities
-func (q *ListQuery) GetEntitis() []string {
+func (q *ListQuery) GetEntities() []string {
 	return q.Entities
 }
 
@@ -71,7 +71,7 @@ type AggregateQuery struct {
 }
 
 // GetEntitis returns slice of entities
-func (q *AggregateQuery) GetEntitis() []string {
+func (q *AggregateQuery) GetEntities() []string {
 	return q.Entities
 }
 

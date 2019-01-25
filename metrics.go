@@ -119,10 +119,16 @@ func (c *ClickHouseMetrics) Client() *sql.DB {
 // List retruns list of the metrics by the query
 func (c *ClickHouseMetrics) List(q *ListQuery) ([]interface{}, error) {
 
-	queryReq := ""
-	if q.Entity != "" && q.Label != "" {
-		queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s'", q.Label, q.Label, c.config.DBName, q.Entity)
+	qb := &queryBuilder{
+		aq: q,
+		c:  c.config,
 	}
+	query, err := qb.make()
+	if err != nil {
+		return nil, err
+	}
+
+	/*queryReq := ""
 	if q.TsEqual != 0 {
 		queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND ts = %d", q.Label, q.Label, c.config.DBName, q.Entity, q.TsEqual)
 	}
@@ -131,8 +137,8 @@ func (c *ClickHouseMetrics) List(q *ListQuery) ([]interface{}, error) {
 	}
 	if q.Range != "" {
 		queryReq = fmt.Sprintf("SELECT datetime, entity, values[indexOf(names, '%s')] AS %s FROM %s WHERE entity = '%s' AND datetime > (%s)", q.Label, q.Label, c.config.DBName, q.Entity, constructDateRange(q.Range))
-	}
-	rows, err := c.client.Query(queryReq)
+	}*/
+	rows, err := c.client.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply query: %v", err)
 	}
@@ -148,7 +154,7 @@ func (c *ClickHouseMetrics) List(q *ListQuery) ([]interface{}, error) {
 			return nil, fmt.Errorf("unable to scan values: %v", err)
 		}
 		metrics = append(metrics, map[string]interface{}{
-			"entity": q.Entity,
+			"entity": entity,
 			q.Label:  value,
 			"ts":     ts,
 		})
