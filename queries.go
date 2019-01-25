@@ -69,3 +69,43 @@ type AggregateQuery struct {
 	Range    string
 	ActionIf string
 }
+
+// GetEntitis returns slice of entities
+func (q *AggregateQuery) GetEntitis() []string {
+	return q.Entities
+}
+
+// GetLabel returns label
+func (q *AggregateQuery) GetLabel() string {
+	return q.Label
+}
+
+// GetTsEqual returns timestamp equal param
+func (q *AggregateQuery) GetTsEqual() uint32 {
+	return 0
+}
+
+// GetTsGreater returns timestamp greater param
+func (q *AggregateQuery) GetTsGreater() uint32 {
+	return 0
+}
+
+// GetTsLess returns timestamp Less param
+func (q *AggregateQuery) GetTsLess() uint32 {
+	return 0
+}
+
+// GetRange returns range
+func (q *AggregateQuery) GetRange() string {
+	return q.Range
+}
+
+// GetAction returns action
+func (q *AggregateQuery) GetAction() string {
+	return q.Action
+}
+
+// GetActionIf returns action if
+func (q *AggregateQuery) GetActionIf() string {
+	return q.ActionIf
+}

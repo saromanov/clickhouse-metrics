@@ -13,7 +13,7 @@ var (
 
 // queryBuilder provides making of the query to ClickHouse
 type queryBuilder struct {
-	aq *AggregateQuery
+	aq query
 	c  *Config
 	q  string
 }
@@ -27,11 +27,11 @@ func (q *queryBuilder) make() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	queryReq := fmt.Sprintf("SELECT %s(values[indexOf(names, '%s')]) AS result FROM %s", action, q.aq.Label, q.c.DBName)
-	if len(q.aq.Entities) > 0 {
+	queryReq := fmt.Sprintf("SELECT %s(values[indexOf(names, '%s')]) AS result FROM %s", action, q.aq.GetLabel(), q.c.DBName)
+	if len(q.aq.GetEntities()) > 0 {
 		queryReq += q.makeEntitiesQuery()
 	}
-	if q.aq.Range != "" {
+	if q.aq.GetRange() != "" {
 		queryReq += q.makeRangeQuery()
 	}
 	return queryReq, nil
@@ -42,14 +42,14 @@ func (q *queryBuilder) validateQuery() error {
 	if q.aq == nil {
 		return errQueryIsNotDefined
 	}
-	if q.aq.Label == "" {
+	if q.aq.GetLabel() == "" {
 		return errLabelIsNotDefined
 	}
 	return nil
 }
 
 func (q *queryBuilder) makeEntitiesQuery() string {
-	entities := q.aq.Entities
+	entities := q.aq.GetEntities()
 	if len(entities) == 1 {
 		return fmt.Sprintf(" WHERE entity = '%s'", entities[0])
 	}
@@ -71,16 +71,16 @@ func (q *queryBuilder) makeRangeQuery() string {
 		q.q += res
 	}(res)
 	if strings.Contains(q.q, "WHERE") {
-		res = fmt.Sprintf(" AND (datetime > (%s))", constructDateRange(q.aq.Range))
+		res = fmt.Sprintf(" AND (datetime > (%s))", constructDateRange(q.aq.GetRange()))
 		return res
 	}
-	res = fmt.Sprintf("WHERE datetime > (%s)", constructDateRange(q.aq.Range))
+	res = fmt.Sprintf("WHERE datetime > (%s)", constructDateRange(q.aq.GetRange()))
 	return res
 }
 
 // checkAction return error if action function is not defined
 func (q *queryBuilder) checkAction() (string, error) {
-	res, ok := actions[q.aq.Action]
+	res, ok := actions[q.aq.GetAction()]
 	if !ok {
 		return "", errActionIsNotFound
 	}
