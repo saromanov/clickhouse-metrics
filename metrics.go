@@ -12,7 +12,7 @@ import (
 
 var (
 	dateRanges = map[string]string{"m": "toIntervalMinute", "h": "toIntervalHour"}
-	actions    = map[string]string{"sum": "sum", "any": "any", "anyLast": "anyLast", "min": "min", "max": "max", "avg": "avg", "uniq": "uniq", "uniqhll": "uniqHLL12","median":"median","varsamp": "varSamp"}
+	actions    = map[string]string{"count": "count", "sum": "sum", "any": "any", "anyLast": "anyLast", "min": "min", "max": "max", "avg": "avg", "uniq": "uniq", "uniqhll": "uniqHLL12", "median": "median", "varsamp": "varSamp", "stddevsamp": "stddevSamp", "argmin": "argMin"}
 
 	errActionIsNotFound = errors.New("action is not found")
 )
@@ -163,7 +163,10 @@ func (c *ClickHouseMetrics) Aggregate(q *AggregateQuery) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	queryReq := fmt.Sprintf("SELECT %s(values[indexOf(names, '%s')]) AS result FROM %s WHERE entity = '%s'", action, q.Label, c.config.DBName, q.Entity)
+	queryReq := fmt.Sprintf("SELECT %s(values[indexOf(names, '%s')]) AS result FROM %s", action, q.Label, c.config.DBName)
+	if q.Entity != "" {
+		queryReq += fmt.Sprintf(" WHERE entity = '%s'", q.Entity)
+	}
 	rows, err := c.client.Query(queryReq)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply query: %v", err)
