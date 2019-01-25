@@ -32,7 +32,10 @@ type ClickHouseMetrics struct {
 
 // New provides initialization of the project
 func New(c *Config) (*ClickHouseMetrics, error) {
-	connect, err := sql.Open("clickhouse", "tcp://127.0.0.1:9000?username=&compress=true&debug=true")
+	connect, err := sql.Open("clickhouse", c.Address)
+	if err != nil {
+		return nil, err
+	}
 	if err := connect.Ping(); err != nil {
 		if exception, ok := err.(*clickhouse.Exception); ok {
 			return nil, fmt.Errorf("[%d] %s %s", exception.Code, exception.Message, exception.StackTrace)
