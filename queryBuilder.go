@@ -2,12 +2,14 @@ package metrics
 
 import (
 	"fmt"
+	"strings"
 )
 
 // queryBuilder provides making of the query to ClickHouse
 type queryBuilder struct {
 	aq *AggregateQuery
 	c  *Config
+	q  string
 }
 
 // make retruns query for ClickHouse
@@ -19,6 +21,9 @@ func (q *queryBuilder) make() (string, error) {
 	queryReq := fmt.Sprintf("SELECT %s(values[indexOf(names, '%s')]) AS result FROM %s", action, q.aq.Label, q.c.DBName)
 	if len(q.aq.Entities) > 0 {
 		queryReq += q.makeEntitiesQuery()
+	}
+	if q.aq.Range != "" {
+
 	}
 	return queryReq, nil
 }
@@ -35,7 +40,18 @@ func (q *queryBuilder) makeEntitiesQuery() string {
 			res += "OR "
 		}
 	}
-	return res + ")"
+	q.q = res + ")"
+	return q.q
+}
+
+// makeRangeQuery retruns query if range is defined
+func (q *queryBuilder) makeRangeQuery() string {
+	if strings.Contains(q.q, "WHERE") {
+		q.q += fmt.Sprintf(" AND datetime > (%s)", constructDateRange(q.aq.Range))
+		return q.q
+	}
+	q.q += fmt.Sprintf("WHERE datetime > (%s)", constructDateRange(q.aq.Range))
+	return q.q
 }
 
 // checkAction return error if action function is not defined
