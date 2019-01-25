@@ -1,5 +1,7 @@
 package metrics
 
+import "fmt"
+
 // Query provides struct for the query definition
 type Query struct {
 	Entity    string
@@ -12,7 +14,19 @@ type Query struct {
 
 // AggregateQuery defines struct for making aggregation
 type AggregateQuery struct {
-	Action string
-	Entity string
-	Label  string
+	Action   string
+	Entities []string
+	Label    string
+}
+
+// makeEntitiesQuery retruns query for entities
+func (a *AggregateQuery) makeEntitiesQuery() string {
+	if len(a.Entities) == 1 {
+		return fmt.Sprintf(" WHERE entity = '%s'", a.Entities[0])
+	}
+	res := " WHERE ( "
+	for i := 0; i < len(a.Entities); i++ {
+		res += fmt.Sprintf("entity = '%s AND ", a.Entities[i])
+	}
+	return res + ")"
 }
