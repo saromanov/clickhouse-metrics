@@ -23,7 +23,7 @@ func (q *queryBuilder) make() (string, error) {
 		queryReq += q.makeEntitiesQuery()
 	}
 	if q.aq.Range != "" {
-
+		queryReq += q.makeEntitiesQuery()
 	}
 	return queryReq, nil
 }
