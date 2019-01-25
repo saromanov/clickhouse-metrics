@@ -16,5 +16,5 @@ type AggregateQuery struct {
 	Entities []string
 	Label    string
 	Range    string
-	ActionIf bool
+	ActionIf string
 }

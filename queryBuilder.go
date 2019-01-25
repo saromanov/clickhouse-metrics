@@ -1,8 +1,14 @@
 package metrics
 
 import (
+	"errors"
 	"fmt"
 	"strings"
+)
+
+var (
+	errQueryIsNotDefined = errors.New("query is not defined")
+	errLabelIsNotDefined = errors.New("label is not defined")
 )
 
 // queryBuilder provides making of the query to ClickHouse
@@ -14,6 +20,9 @@ type queryBuilder struct {
 
 // make retruns query for ClickHouse
 func (q *queryBuilder) make() (string, error) {
+	if err := q.validateQuery(); err != nil {
+		return "", err
+	}
 	action, err := q.checkAction()
 	if err != nil {
 		return "", err
@@ -26,6 +35,17 @@ func (q *queryBuilder) make() (string, error) {
 		queryReq += q.makeRangeQuery()
 	}
 	return queryReq, nil
+}
+
+// validateQuery provides validation of the query
+func (q *queryBuilder) validateQuery() error {
+	if q.aq == nil {
+		return errQueryIsNotDefined
+	}
+	if q.aq.Label == "" {
+		return errLabelIsNotDefined
+	}
+	return nil
 }
 
 func (q *queryBuilder) makeEntitiesQuery() string {
