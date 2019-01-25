@@ -23,11 +23,18 @@ func (q *queryBuilder) make() (string, error) {
 	if err := q.validateQuery(); err != nil {
 		return "", err
 	}
-	action, err := q.checkAction()
-	if err != nil {
-		return "", err
+	queryReq := "SELECT "
+	switch q.aq.Type() {
+	case AggregationQueryType:
+		action, err := q.checkAction()
+		if err != nil {
+			return "", err
+		}
+		queryReq += fmt.Sprintf("%s(values[indexOf(names, '%s')]) ", action, q.aq.GetLabel())
+	case ListQueryType:
+		queryReq += fmt.Sprintf("values[indexOf(names, '%s')] ", q.aq.GetLabel())
 	}
-	queryReq := fmt.Sprintf("SELECT %s(values[indexOf(names, '%s')]) AS result FROM %s", action, q.aq.GetLabel(), q.c.DBName)
+	queryReq += fmt.Sprintf("AS result FROM %s ", q.c.DBName)
 	if len(q.aq.GetEntities()) > 0 {
 		queryReq += q.makeEntitiesQuery()
 	}

@@ -1,5 +1,16 @@
 package metrics
 
+// QueryType provides definition for the type of the query
+type QueryType string
+
+const (
+	// ListQueryType defines query for the list
+	ListQueryType QueryType = "listQuery"
+
+	// AggregationQueryType defines query for aggregation
+	AggregationQueryType QueryType = "aggregationQuery"
+)
+
 type query interface {
 	GetEntities() []string
 	GetLabel() string
@@ -9,6 +20,7 @@ type query interface {
 	GetRange() string
 	GetAction() string
 	GetActionIf() string
+	Type() QueryType
 }
 
 // ListQuery provides struct for the query definition
@@ -21,7 +33,7 @@ type ListQuery struct {
 	Range     string
 }
 
-// GetEntitis returns slice of entities
+// GetEntities returns slice of entities
 func (q *ListQuery) GetEntities() []string {
 	return q.Entities
 }
@@ -61,6 +73,11 @@ func (q *ListQuery) GetActionIf() string {
 	return ""
 }
 
+// Type returns type of the query
+func (q *ListQuery) Type() QueryType {
+	return ListQueryType
+}
+
 // AggregateQuery defines struct for making aggregation
 type AggregateQuery struct {
 	Action   string
@@ -70,9 +87,14 @@ type AggregateQuery struct {
 	ActionIf string
 }
 
-// GetEntitis returns slice of entities
+// GetEntities returns slice of entities
 func (q *AggregateQuery) GetEntities() []string {
 	return q.Entities
+}
+
+// Type returns type of the query
+func (q *AggregateQuery) Type() QueryType {
+	return AggregationQueryType
 }
 
 // GetLabel returns label
