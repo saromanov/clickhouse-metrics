@@ -116,8 +116,8 @@ func (c *ClickHouseMetrics) Client() *sql.DB {
 	return c.client
 }
 
-// QueryByMetric retruns records by the metric name
-func (c *ClickHouseMetrics) QueryByMetric(q *Query) ([]interface{}, error) {
+// List retruns list of the metrics by the query
+func (c *ClickHouseMetrics) List(q *ListQuery) ([]interface{}, error) {
 
 	queryReq := ""
 	if q.Entity != "" && q.Label != "" {
