@@ -8,12 +8,8 @@ jobs:
     - image: circleci/golang:1.11
     steps:
     - checkout
+    - run: go get github.com/mattn/goveralls
+    - run: go get ./...
     - run: go vet ./...
-    - run: go test ./...
-  test:
-    pre:
-      - go get github.com/mattn/goveralls
-    override:
-      - go test -v -cover -race -coverprofile=/home/ubuntu/coverage.out
-    post:
-      - /home/ubuntu/.go_workspace/bin/goveralls -coverprofile=/home/ubuntu/coverage.out -service=circle-ci -repotoken=12aOcrQk9PXfM3KQgvQXCYn515GG3bi8x
+    - run: go test -v -cover -race -coverprofile=/home/ubuntu/coverage.out
+    - run:  /home/ubuntu/.go_workspace/bin/goveralls -coverprofile=/home/ubuntu/coverage.out -service=circle-ci -repotoken=12aOcrQk9PXfM3KQgvQXCYn515GG3bi8x
