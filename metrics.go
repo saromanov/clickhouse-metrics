@@ -159,16 +159,15 @@ func (c *ClickHouseMetrics) QueryByMetric(q *Query) ([]interface{}, error) {
 
 // Aggregate provides operations for aggregation
 func (c *ClickHouseMetrics) Aggregate(q *AggregateQuery) (interface{}, error) {
-	action, err := checkAction(q.Action)
+	qb := &queryBuilder{
+		aq: q,
+		c:  c.config,
+	}
+	query, err := qb.make()
 	if err != nil {
 		return nil, err
 	}
-	queryReq := fmt.Sprintf("SELECT %s(values[indexOf(names, '%s')]) AS result FROM %s", action, q.Label, c.config.DBName)
-	if len(q.Entities) > 0 {
-		queryReq += q.makeEntitiesQuery()
-	}
-	fmt.Println(queryReq)
-	rows, err := c.client.Query(queryReq)
+	rows, err := c.client.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply query: %v", err)
 	}
