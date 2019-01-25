@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -9,7 +10,12 @@ import (
 	"github.com/kshvakov/clickhouse"
 )
 
-var dateRanges = map[string]string{"m": "toIntervalMinute", "h": "toIntervalHour"}
+var (
+	dateRanges = map[string]string{"m": "toIntervalMinute", "h": "toIntervalHour"}
+	actions    = map[string]string{"sum": "sum", "any": "any", "anyLast": "anyLast", "min": "min", "max": "max", "sum": "sum"}
+
+	errActionIsNotFound = errors.New("action is not found")
+)
 
 // Metric defines structure for metrics representation
 type Metric struct {
@@ -179,4 +185,13 @@ func constructDateRange(r string) string {
 		}
 	}
 	return resp
+}
+
+// checkAction return error if action function is not defined
+func checkAction(a string) (string, error) {
+	res, ok := actions[a]
+	if !ok {
+		return "", errActionIsNotFound
+	}
+	return res, nil
 }
