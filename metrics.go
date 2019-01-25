@@ -164,8 +164,8 @@ func (c *ClickHouseMetrics) Aggregate(q *AggregateQuery) (interface{}, error) {
 		return nil, err
 	}
 	queryReq := fmt.Sprintf("SELECT %s(values[indexOf(names, '%s')]) AS result FROM %s", action, q.Label, c.config.DBName)
-	if q.Entity != "" {
-		queryReq += fmt.Sprintf(" WHERE entity = '%s'", q.Entity)
+	if len(q.Entities) > 0 {
+		queryReq += q.makeEntitiesQuery()
 	}
 	rows, err := c.client.Query(queryReq)
 	if err != nil {
