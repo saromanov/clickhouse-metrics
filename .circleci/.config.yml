@@ -1,0 +1,12 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/saromanov/clickhouse-metrics
+    environment:
+      TEST_RESULTS: /tmp/test-results
+    docker:
+    - image: circleci/golang:1.11
+    steps:
+    - checkout
+    - run: go vet ./...
+    - run: go test ./...
