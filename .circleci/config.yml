@@ -12,5 +12,4 @@ jobs:
     - run: go get github.com/stretchr/testify/assert
     - run: go get ./...
     - run: go vet ./...
-    - run: go test -v -cover -race -coverprofile=/home/ubuntu/coverage.out
-    - run:  /home/ubuntu/.go_workspace/bin/goveralls -coverprofile=/home/ubuntu/coverage.out -service=circle-ci -repotoken=12aOcrQk9PXfM3KQgvQXCYn515GG3bi8x
+    - run: go test
