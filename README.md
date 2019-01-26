@@ -1,4 +1,5 @@
 # clickhouse-metrics
+[![Documentation](https://godoc.org/github.com/saromanov/clickhouse-metrics?status.svg)](http://godoc.org/github.com/saromanov/clickhouse-metrics)
 [![Go Report Card](https://goreportcard.com/badge/github.com/saromanov/clickhouse-metrics)](https://goreportcard.com/report/github.com/saromanov/clickhouse-metrics)
 [![Coverage Status](https://coveralls.io/repos/github/saromanov/clickhouse-metrics/badge.svg?branch=master)](https://coveralls.io/github/saromanov/clickhouse-metrics?branch=master)
 [![CircleCI](https://circleci.com/gh/saromanov/clickhouse-metrics.svg?style=svg)](https://circleci.com/gh/saromanov/clickhouse-metrics)
@@ -6,9 +7,17 @@
 
 Implementation of metric storage over ClickHouse
 
+### Installing
+
+First, you should have installed ClickHouse. To make it an easy way, you can get Docker image of [ClickHouse](https://hub.docker.com/r/yandex/clickhouse-server/)
+
+Then, install this package
+```
+go get github.com/saromanov/clickhouse-metrics
+```
+
 ### Examples - Getting list of the metrics
 
-First step - init of the app
 
 ```go
 package main
@@ -62,3 +71,21 @@ ms, err := d.QueryByMetric(&metrics.Query{
 		Range:  "1h",
 })
 ```
+
+## Running the tests
+
+```
+go test .
+```
+
+## Built With
+
+* [Dropwizard](http://github.com/kshvakov/clickhouse) - Golang driver for ClickHouse
+
+## Authors
+
+* **Sergey Romanov** - [saromanov](https://github.com/saromanov)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
