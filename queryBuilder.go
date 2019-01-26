@@ -95,7 +95,8 @@ func (q *queryBuilder) checkAction() (string, error) {
 }
 
 // constructDateRange provides constructing of the range
-// to ClickHouse format
+// to ClickHouse format. In the case of invalid input
+// its return default range within hour
 func constructDateRange(r string) string {
 	resp := "now()"
 	for k, v := range dateRanges {
@@ -104,5 +105,5 @@ func constructDateRange(r string) string {
 			return resp + fmt.Sprintf(" - %s(%s)", v, value)
 		}
 	}
-	return resp
+	return fmt.Sprintf("%s - toIntervalHour(1)", resp)
 }

@@ -9,6 +9,7 @@ jobs:
     steps:
     - checkout
     - run: go get github.com/mattn/goveralls
+    - run: go get github.com/stretchr/testify/assert
     - run: go get ./...
     - run: go vet ./...
     - run: go test -v -cover -race -coverprofile=/home/ubuntu/coverage.out

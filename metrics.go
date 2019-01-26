@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	dateRanges = map[string]string{"m": "toIntervalMinute", "h": "toIntervalHour"}
+	dateRanges = map[string]string{"m": "toIntervalMinute", "h": "toIntervalHour", "d": "toIntervalDay", "w": "toIntervalWeek"}
 	actions    = map[string]string{"count": "count", "sum": "sum", "any": "any", "anyLast": "anyLast", "min": "min", "max": "max", "avg": "avg", "uniq": "uniq", "uniqhll": "uniqHLL12", "median": "median", "varsamp": "varSamp", "stddevsamp": "stddevSamp", "argmin": "argMin"}
 
 	errActionIsNotFound = errors.New("action is not found")
