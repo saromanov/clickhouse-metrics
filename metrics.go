@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"github.com/pkg/errors"
 
 	"github.com/ClickHouse/clickhouse-go"
 )
@@ -38,9 +39,9 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 	}
 	if err := connect.Ping(); err != nil {
 		if exception, ok := err.(*clickhouse.Exception); ok {
-			return nil, fmt.Errorf("[%d] %s %s", exception.Code, exception.Message, exception.StackTrace)
+			return nil, errors.Wrap("[%d] %s %s", exception.Code, exception.Message, exception.StackTrace)
 		}
-		return nil, fmt.Errorf("unable to ping Clickhouse: %v", err)
+		return nil, errors.Wrap("unable to ping Clickhouse", err)
 	}
 
 	if c.DBName == "" {
@@ -56,7 +57,7 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 		) engine=MergeTree(d, datetime, 8192)
 	`, c.DBName))
 	if err != nil {
-		return nil, fmt.Errorf("unable to create metrics table: %v", err)
+		return nil, errors.Wrap("unable to create metrics table", err)
 	}
 
 	return &ClickHouseMetrics{
@@ -70,18 +71,18 @@ func (c *ClickHouseMetrics) Insert(m *Metric) error {
 	m.DateTime = time.Now()
 	tx, err := c.client.Begin()
 	if err != nil {
-		return fmt.Errorf("unable to begin transaction: %v", err)
+		return errors.Wrap(err, "unable to begin transaction")
 	}
 	stmt, err := tx.Prepare(fmt.Sprintf("INSERT INTO %s (datetime, names, values, entity) VALUES (?, ?, ?, ?)", c.config.DBName))
 	if err != nil {
-		return fmt.Errorf("unable to prepare transaction: %v", err)
+		return errors.Wrap(err, "unable to prepare transaction")
 	}
 	_, err = stmt.Exec(time.Now(), m.Names, m.Values, m.Entity)
 	if err != nil {
-		return fmt.Errorf("unable to apply query: %v", err)
+		return errors.Wrap(err, "unable to apply query")
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("unable to commit transaction: %v", err)
+		return errors.Wrap(err, "unable to commit transaction")
 	}
 	return nil
 }
@@ -90,7 +91,7 @@ func (c *ClickHouseMetrics) Insert(m *Metric) error {
 func (c *ClickHouseMetrics) Query(q string) ([]*Metric, error) {
 	rows, err := c.client.Query(q)
 	if err != nil {
-		return nil, fmt.Errorf("unable to apply query: %v", err)
+		return nil, errors.Wrap(err, "unable to apply query")
 	}
 	defer rows.Close()
 	metrics := []*Metric{}
@@ -102,7 +103,7 @@ func (c *ClickHouseMetrics) Query(q string) ([]*Metric, error) {
 			datetime time.Time
 		)
 		if err := rows.Scan(&values, &names, &entity, &datetime); err != nil {
-			return nil, fmt.Errorf("unable to scan values: %v", err)
+			return nil, errors.Wrap(err, "unable to scan values")
 		}
 		metrics = append(metrics, &Metric{
 			DateTime: datetime,
@@ -143,7 +144,7 @@ func (c *ClickHouseMetrics) List(q *ListQuery) ([]interface{}, error) {
 	}*/
 	rows, err := c.client.Query(query)
 	if err != nil {
-		return nil, fmt.Errorf("unable to apply query: %v", err)
+		return nil, errors.Wrap(err, "unable to apply query")
 	}
 	defer rows.Close()
 	metrics := []interface{}{}
@@ -154,7 +155,7 @@ func (c *ClickHouseMetrics) List(q *ListQuery) ([]interface{}, error) {
 			value  float32
 		)
 		if err := rows.Scan(&ts, &entity, &value); err != nil {
-			return nil, fmt.Errorf("unable to scan values: %v", err)
+			return nil, errors.Wrap(err, "unable to scan values")
 		}
 		metrics = append(metrics, map[string]interface{}{
 			"entity": entity,
@@ -178,13 +179,13 @@ func (c *ClickHouseMetrics) Aggregate(q *AggregateQuery) (interface{}, error) {
 	fmt.Println("QUERY: ", query)
 	rows, err := c.client.Query(query)
 	if err != nil {
-		return nil, fmt.Errorf("unable to apply query: %v", err)
+		return nil, errors.Wrap(err, "unable to apply query")
 	}
 	defer rows.Close()
 	var result interface{}
 	for rows.Next() {
 		if err := rows.Scan(&result); err != nil {
-			return nil, fmt.Errorf("unable to scan values: %v", err)
+			return nil, errors.Wrap(err, "unable to scan values")
 		}
 	}
 	return result, nil
