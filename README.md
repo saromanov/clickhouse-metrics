@@ -65,7 +65,7 @@ err = d.Insert(&metrics.Metric{
 And after this, you get apply query by metric which returns list of results which satisfy the conditions
 
 ```go
-ms, err := d.QueryByMetric(&metrics.Query{
+ms, err := d.List(&metrics.ListQuery{
 		Label:  "cpu",
 		Entity: "param",
 		Range:  "1h",
@@ -80,7 +80,7 @@ go test .
 
 ## Built With
 
-* [Dropwizard](http://github.com/kshvakov/clickhouse) - Golang driver for ClickHouse
+* [kshvakov/clickhouse](http://github.com/kshvakov/clickhouse) - Golang driver for ClickHouse
 
 ## Authors
 

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kshvakov/clickhouse"
+	"github.com/ClickHouse/clickhouse-go"
 )
 
 var (
