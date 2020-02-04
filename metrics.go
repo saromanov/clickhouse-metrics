@@ -2,9 +2,9 @@ package metrics
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"time"
+
 	"github.com/pkg/errors"
 
 	"github.com/ClickHouse/clickhouse-go"
@@ -39,9 +39,9 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 	}
 	if err := connect.Ping(); err != nil {
 		if exception, ok := err.(*clickhouse.Exception); ok {
-			return nil, errors.Wrap("[%d] %s %s", exception.Code, exception.Message, exception.StackTrace)
+			return nil, fmt.Errorf("[%d] %s %s", exception.Code, exception.Message, exception.StackTrace)
 		}
-		return nil, errors.Wrap("unable to ping Clickhouse", err)
+		return nil, errors.Wrap(err, "unable to ping Clickhouse")
 	}
 
 	if c.DBName == "" {
@@ -57,7 +57,7 @@ func New(c *Config) (*ClickHouseMetrics, error) {
 		) engine=MergeTree(d, datetime, 8192)
 	`, c.DBName))
 	if err != nil {
-		return nil, errors.Wrap("unable to create metrics table", err)
+		return nil, errors.Wrap(err, "unable to create metrics table")
 	}
 
 	return &ClickHouseMetrics{
