@@ -9,7 +9,8 @@ import (
 
 func main() {
 	d, err := metrics.New(&metrics.Config{
-		DBName: "base3",
+		DBName:  "base3",
+		Address: "tcp://127.0.0.1:9000?debug=true",
 	})
 	if err != nil {
 		panic(err)

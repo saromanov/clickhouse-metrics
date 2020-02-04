@@ -35,7 +35,7 @@ type ClickHouseMetrics struct {
 func New(c *Config) (*ClickHouseMetrics, error) {
 	connect, err := sql.Open("clickhouse", c.Address)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to open Clickhouse")
 	}
 	if err := connect.Ping(); err != nil {
 		if exception, ok := err.(*clickhouse.Exception); ok {
