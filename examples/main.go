@@ -1,11 +1,25 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
 	metrics "github.com/saromanov/clickhouse-metrics"
 )
+
+func list(d *metrics.ClickHouseMetrics) {
+	ms, err := d.List(&metrics.ListQuery{
+		Label:    "cpu",
+		Entities: []string{"param"},
+		Range:    "1h",
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(ms)
+}
 
 func main() {
 	d, err := metrics.New(&metrics.Config{
